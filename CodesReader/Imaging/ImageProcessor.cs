@@ -11,66 +11,92 @@ namespace CodesReader.Imaging
 {
     public class ImageProcessor : IImageProcessor
     {
+        private static readonly Grayscale GrayScaleFilter = new Grayscale(0.2989, 0.5870, 0.1140);
+        private static readonly RotateBilinear RotateFilter = new RotateBilinear(90, false);
+        private static readonly Threshold ThresholdFilter204 = new Threshold(204);
+        private static readonly Invert InvertFilter = new Invert();
+        
+        private static readonly Opening OpeningHorizontalLines;
+        private static readonly Opening OpeningVerticalLines;
+
+        static ImageProcessor()
+        {
+            const int strelSize = 45;
+            var strel = new short[strelSize, strelSize];
+            Enumerable.Range(0, 45).ToList().ForEach(t => strel[22, t] = 1);
+            OpeningHorizontalLines = new Opening(strel);
+
+            const int strelVertSize = 5;
+            var strelVertical = new short[strelVertSize, strelVertSize];
+            Enumerable.Range(0, 5).ToList().ForEach(t => strelVertical[t, 2] = 1);
+            OpeningVerticalLines = new Opening(strelVertical);
+        }
+
         public Bitmap SegmentCode(Bitmap originalImage)
         {
-            using (Bitmap image = Accord.Imaging.Image.Clone(originalImage))
-            {
-                UnmanagedImage img = UnmanagedImage.FromManagedImage(image);
-                img = PreProcess(img);
-                img = Process(img);
-                return img.ToManagedImage(false);
-            }
+            UnmanagedImage img = UnmanagedImage.FromManagedImage(originalImage);
+            img = PreProcess(img);
+            img = Process(img);
+            return img.ToManagedImage(false);
         }
 
         private UnmanagedImage PreProcess(UnmanagedImage img)
         {
-            FiltersSequence sequence = new FiltersSequence();
             int width = Math.Max(img.Width, img.Height) - 99;
             int height = Math.Min(img.Width, img.Height);
             
             if (img.PixelFormat == PixelFormat.Format24bppRgb)
             {
-                sequence.Add(new Grayscale(0.2989, 0.5870, 0.1140));
+                ApplyFilter(GrayScaleFilter, ref img);
             }
             if (img.Height > img.Width)
             {
-                sequence.Add(new RotateBilinear(90, false));
+                ApplyFilter(RotateFilter, ref img);
             }
-            sequence.Add(new Crop(new Rectangle(49, 0, width, height)));
-            UnmanagedImage result = sequence.Apply(img);
-            img.Dispose();
-            return result;
+
+            var cropFilter = new Crop(new Rectangle(49, 0, width, height));
+            ApplyFilter(cropFilter, ref img);
+            return img;
         }
 
-        private UnmanagedImage Process(UnmanagedImage img)
+        private UnmanagedImage Process(UnmanagedImage originalImage)
         {
-            FiltersSequence sequence = new FiltersSequence();
-            sequence.Add(new Threshold(204));
-            sequence.Add(new RemoveConnectedComponents(new BlobFilter(8)));
+            UnmanagedImage img = UnmanagedImage.Create(originalImage.Width, originalImage.Height, originalImage.PixelFormat);
+            ThresholdFilter204.Apply(originalImage, img);
 
-            var strel = new short[45, 45];
-            Enumerable.Range(0, 45).ToList().ForEach(t => strel[22, t] = 1);
-            sequence.Add(new Opening(strel));
+            InvertFilter.ApplyInPlace(img);
+            BlobsFiltering removeSmallObjects = new BlobsFiltering(new BlobFilter(8));
+            removeSmallObjects.ApplyInPlace(img);
 
-            sequence.Add(new RemoveConnectedComponents(new BlobFilterBorder(img.Width)));
+            InvertFilter.ApplyInPlace(img);
+            OpeningHorizontalLines.ApplyInPlace(img);
 
-            var strelVertical = new short[5, 5];
-            Enumerable.Range(0, 5).ToList().ForEach(t => strelVertical[t, 2] = 1);
-            sequence.Add(new Opening(strelVertical));
+            BlobsFiltering clearBorderFilter = new BlobsFiltering(new BlobFilterBorder(img.Width));
+            InvertFilter.ApplyInPlace(img);
+            clearBorderFilter.ApplyInPlace(img);
 
-            UnmanagedImage processedImage = sequence.Apply(img);
+            InvertFilter.ApplyInPlace(img);
+            OpeningVerticalLines.ApplyInPlace(img);
 
-            new Invert().ApplyInPlace(processedImage);
+            InvertFilter.ApplyInPlace(img);
             BlobCounter blobCounter = new BlobCounter();
-            blobCounter.ProcessImage(processedImage);
+            blobCounter.ProcessImage(img);
 
             // find biggest object and extract it
             Blob blob = blobCounter.GetObjectsInformation().MaxBy(t => t.Area);
-            UnmanagedImage result = new Crop(new Rectangle(blob.Rectangle.Location.X, blob.Rectangle.Location.Y, blob.Rectangle.Width + 1, blob.Rectangle.Height + 1)).Apply(img);
+            UnmanagedImage result = new Crop(new Rectangle(blob.Rectangle.Location.X, blob.Rectangle.Location.Y, blob.Rectangle.Width + 1, blob.Rectangle.Height + 1)).Apply(originalImage);
 
-            processedImage.Dispose();
             img.Dispose();
+            originalImage.Dispose();
             return result;
+        }
+
+        private void ApplyFilter(IFilter filter, ref UnmanagedImage source)
+        {
+            UnmanagedImage result = filter.Apply(source);
+            UnmanagedImage tmp = source;
+            source = result;
+            tmp.Dispose();
         }
     }
 
