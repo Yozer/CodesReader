@@ -3,11 +3,12 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Emgu.CV;
 
 namespace CodesReader.Imaging
 {
     public interface IImageProcessor
     {
-        Bitmap SegmentCode(Bitmap image);
+        List<Bitmap> SegmentCode(string path);
     }
 }
