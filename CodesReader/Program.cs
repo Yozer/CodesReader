@@ -73,7 +73,7 @@ namespace CodesReader
                 times.Add(sw.ElapsedMilliseconds);
             }
 
-            File.WriteAllText("times_cuda.txt", $"avg: {times.Average()} min: {times.Min()} max: {times.Max()}");
+            File.WriteAllText("times_cpu.txt", $"avg: {times.Average()} min: {times.Min()} max: {times.Max()}");
 
             //foreach (var file in Directory.EnumerateFiles(@"D:\dataset\easy\read"))
             //Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\read"), new ParallelOptions {MaxDegreeOfParallelism = 8}, file =>

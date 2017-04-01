@@ -8,13 +8,12 @@
 
 extern "C" __declspec(dllexport) void segment_codes(char* path, ArrayStruct& result, uchar*& codePtr)
 {
-	cuda::GpuMat buffer, source;
 	Mat img = imread(path, CV_LOAD_IMAGE_GRAYSCALE);
-	source.upload(img);
+	Mat buffer;
+	PreProcess(img, buffer);
 
-	PreProcess(source, buffer);
-	source.download(img);
-	Rect codeRect = Process(source, buffer);
+	Mat preprocessedImage = img.clone();
+	Rect codeRect = Process(preprocessedImage, buffer);
 
 	if(codeRect.width > 450 | codeRect.width < 400 || codeRect.height > 28 || codeRect.height < 13)
 	{
@@ -50,13 +49,13 @@ uchar* MatToBytes(Mat& image, ArrayStruct& result)
 	return codePtr;
 }
 
-void inline Inverse(cuda::GpuMat& source, cuda::GpuMat& buffer)
+void inline Inverse(Mat& source, Mat& buffer)
 {
 	cuda::bitwise_not(source, buffer);
 	std::swap(source, buffer);
 }
 
-Rect Process(cuda::GpuMat& source, cuda::GpuMat& buffer)
+Rect Process(Mat& source, Mat& buffer)
 {
 	cuda::threshold(source, buffer, 204.0, 255.0, CV_THRESH_BINARY_INV);
 	std::swap(source, buffer);
@@ -65,38 +64,35 @@ Rect Process(cuda::GpuMat& source, cuda::GpuMat& buffer)
 	Inverse(source, buffer);
 
 	auto strel = getStructuringElement(MORPH_RECT, Size(45, 1), Point(0, 0));
-	auto horizontalOpening = cuda::createMorphologyFilter(MORPH_OPEN, CV_8UC1, strel);
-
-	horizontalOpening->apply(source, buffer);
+	morphologyEx(source, buffer, MORPH_OPEN, strel);
 	std::swap(source, buffer);
 	Inverse(source, buffer);
 
 	// back to CPU
-	Mat img, buff;
-	source.download(img);
-	ClearBorder(img);
+	ClearBorder(source);
 
 	strel = getStructuringElement(MORPH_RECT, Size(1, 5), Point(0, 0));
-	morphologyEx(img, buff, MORPH_OPEN, strel);
+	morphologyEx(source, buffer, MORPH_OPEN, strel);
 
-	return FindBiggestBlob(buff);
+	return FindBiggestBlob(buffer);
 }
 
-void PreProcess(cuda::GpuMat& source, cuda::GpuMat& buffer)
+void PreProcess(Mat& source, Mat& buffer)
 {
 	auto size = source.size();
 	int width = std::max(size.width, size.height) - 99;
 	int height = std::min(size.width, size.height);
 
-	double rotate = 0, yShift = 0;
 	if (size.height > size.width)
 	{
-		rotate = 90.0;
-		yShift = height;
+		rotate(source, buffer, ROTATE_90_CLOCKWISE);
+		std::swap(source, buffer);
+		buffer.release();
+		buffer = Mat();
 	}
 
-	cuda::rotate(source, buffer, Size2i(width, height), rotate, LEFT_OFFSET, yShift);
-	std::swap(source, buffer);
+	Rect myROI(-LEFT_OFFSET, 0, width, height);
+	source = source(myROI);
 }
 
 Rect FindBiggestBlob(const Mat& img)
@@ -105,7 +101,7 @@ Rect FindBiggestBlob(const Mat& img)
 	const int number = connectedComponentsWithStats(img, labels, stats, centroids);
 
 	if (!img.isContinuous() || !labels.isContinuous() || !stats.isContinuous())
-		std::cout << "WTF";
+		throw std::exception();
 
 	const uchar* const ptr = img.ptr<uchar>(0);
 	const int* const statsPtr = stats.ptr<int>(0);
@@ -141,7 +137,7 @@ void ClearBorder(Mat& img)
 	const int number = connectedComponentsWithStats(img, labels, stats, centroids);
 
 	if (!img.isContinuous() || !labels.isContinuous() || !stats.isContinuous())
-		std::cout << "WTF";
+		throw std::exception();
 
 	uchar* const ptr = img.ptr<uchar>(0);
 	const int* const labelsPtr = labels.ptr<int>(0);
@@ -170,18 +166,17 @@ void ClearBorder(Mat& img)
 	}
 }
 
-void RemoveSmallObjects(cuda::GpuMat& src)
+void RemoveSmallObjects(Mat& src)
 {
 	const int MAX_AREA = 8;
-	Mat img, labels, stats, centroids;
-	src.download(img);
+	Mat labels, stats, centroids;
 
-	const int number = connectedComponentsWithStats(img, labels, stats, centroids);
+	const int number = connectedComponentsWithStats(src, labels, stats, centroids);
 
-	if (!img.isContinuous() || !labels.isContinuous() || !stats.isContinuous())
-		std::cout << "WTF";
+	if (!src.isContinuous() || !labels.isContinuous() || !stats.isContinuous())
+		throw std::exception();
 
-	uchar* const ptr = img.ptr<uchar>(0);
+	uchar* const ptr = src.ptr<uchar>(0);
 	const int* const labelsPtr = labels.ptr<int>(0);
 	const int* const statsPtr = stats.ptr<int>(0);
 
@@ -201,12 +196,10 @@ void RemoveSmallObjects(cuda::GpuMat& src)
 				{
 					if (labelsPtr[labels.cols * y + x] == i)
 					{
-						ptr[img.cols * y + x] = 0;
+						ptr[src.cols * y + x] = 0;
 					}
 				}
 			}
 		}
 	}
-
-	src.upload(img);
 }
