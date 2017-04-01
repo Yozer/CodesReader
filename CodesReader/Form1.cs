@@ -46,7 +46,7 @@ namespace CodesReader
 
                     originalImage.Image = bmp;
 
-                    IImageProcessor processor = new ImageProcessorCuda();
+                    IImageProcessor processor = null;// new ImageProcessorCuda();
                     var result = processor.SegmentCode(ofd.FileName);
                     segmentedImage.Image = result[0];
 

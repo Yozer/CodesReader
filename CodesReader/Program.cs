@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -7,9 +8,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CodesReader.Imaging;
-using Emgu.CV;
-using Emgu.CV.CvEnum;
-using Emgu.CV.Cuda;
 
 namespace CodesReader
 {
@@ -21,7 +19,7 @@ namespace CodesReader
         [STAThread]
         static void Main()
         {
-            //Test();
+            Test();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
@@ -46,14 +44,36 @@ namespace CodesReader
             //img.Dispose();
             //resultHost.Dispose();
 
-            IImageProcessor processor = new ImageProcessorCuda();
+            IImageProcessor processor = new ImageProcessorOpenCv();
 
             //string path = @"D:\B2MMQ-3K3VW-PCCDM-99DBQ-WQRCB.jpg";
+            //processor.SegmentCode(path);
             //using (var result = processor.SegmentCode(path))
             //{
             //    result.Mat.Bitmap.Save(@"D:\tmp.bmp", ImageFormat.Bmp);
             //}
 
+            Stopwatch sw = new Stopwatch();
+            var times = new List<long>(20000);
+
+            foreach (var file in Directory.EnumerateFiles(@"D:\dataset\easy\read"))
+            {
+                sw.Restart();
+                var list = processor.SegmentCode(file);
+                if (list == null)
+                {
+                    File.Copy(file, @"D:\dataset\easy\second_try_c_sharp\not_segmented\" + Path.GetFileName(file), true);
+                }
+                else
+                {
+                    list[0].Save(@"D:\dataset\easy\second_try_c_sharp\read_and_segmented\" + Path.GetFileName(file), ImageFormat.Jpeg);
+                    list.ForEach(t => t.Dispose());
+                }
+
+                times.Add(sw.ElapsedMilliseconds);
+            }
+
+            File.WriteAllText("times_cuda.txt", $"avg: {times.Average()} min: {times.Min()} max: {times.Max()}");
 
             //foreach (var file in Directory.EnumerateFiles(@"D:\dataset\easy\read"))
             //Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\read"), new ParallelOptions {MaxDegreeOfParallelism = 8}, file =>

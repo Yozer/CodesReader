@@ -1,50 +1,53 @@
-// CodesReaderInterop.cpp : Defines the exported functions for the DLL application.
+// CodesReaderNative.cpp : Defines the exported functions for the DLL application.
 //
 
 #include "stdafx.h"
-#include "CodesReaderInterop.h"
+#include "CodesReaderNative.h"
+#include <Objbase.h>
+#include <vector>
 
-#include <opencv2/opencv.hpp>
-
-using namespace cv;
-
-const int LEFT_OFFSET = -49;
-
-void PreProcess(cuda::GpuMat& source, cuda::GpuMat& buffer);
-Rect Process(cuda::GpuMat& source, cuda::GpuMat& buffer);
-void RemoveSmallObjects(cuda::GpuMat& src);
-void ClearBorder(Mat& img);
-Rect FindBiggestBlob(const Mat& img);
-void MatToBytes(Mat& image, ArrayStruct& result, unsigned char*& codePtr);
-
-extern "C" __declspec(dllexport) void __cdecl segment_codes(char* path, ArrayStruct& result, unsigned char*& codePtr)
+extern "C" __declspec(dllexport) void segment_codes(char* path, ArrayStruct& result, uchar*& codePtr)
 {
 	cuda::GpuMat buffer, source;
 	Mat img = imread(path, CV_LOAD_IMAGE_GRAYSCALE);
 	source.upload(img);
 
 	PreProcess(source, buffer);
+	source.download(img);
 	Rect codeRect = Process(source, buffer);
 
-	Mat subRect = img(codeRect);
-	MatToBytes(subRect, result, codePtr);
-	result.width = subRect.cols;
-	result.height = subRect.rows;
+	if(codeRect.width > 450 | codeRect.width < 400 || codeRect.height > 28 || codeRect.height < 13)
+	{
+		codePtr = nullptr;
+	}
+	else
+	{
+		if(codeRect.width + codeRect.x > img.cols)
+		{
+			throw std::exception();
+		}
+		if (codeRect.height + codeRect.y > img.rows)
+		{
+			throw std::exception();
+		}
+		if (codeRect.y < 0 || codeRect.x < 0)
+		{
+			throw std::exception();
+		}
+		Mat subRect = img(codeRect);
+		codePtr = MatToBytes(subRect, result);
+	}
 }
 
-void MatToBytes(Mat& image, ArrayStruct& result, unsigned char*& codePtr)
+uchar* MatToBytes(Mat& image, ArrayStruct& result)
 {
-	
-	//codePtr = new unsigned char[result.length];
-
 	std::vector<uchar> buff;
 	imencode(".bmp", image, buff);
-	codePtr = new unsigned char[buff.size()];
+	auto codePtr = (uchar*)CoTaskMemAlloc(buff.size());
 	memcpy(codePtr, &buff[0], buff.size());
 	result.length = buff.size();
 
-	//result.length = image.total() * image.channels();
-	//std::memcpy(codePtr, image.data, result.length);
+	return codePtr;
 }
 
 void inline Inverse(cuda::GpuMat& source, cuda::GpuMat& buffer)
@@ -120,16 +123,16 @@ Rect FindBiggestBlob(const Mat& img)
 	}
 
 	const int left = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_LEFT];
-	int width = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_WIDTH] + 1;
+	int width = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_WIDTH];
 	const int top = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_TOP];
-	int height = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_HEIGHT] + 1;
+	int height = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_HEIGHT];
 
-	if (left + width > img.cols)
-		--width;
-	if (top + height > img.rows)
-		--height;
+	//if (left + width > img.cols)
+	//	--width;
+	//if (top + height > img.rows)
+	//	--height;
 
-	return Rect(left + (-LEFT_OFFSET), top, width, height);
+	return Rect(left , top, width, height);
 }
 
 void ClearBorder(Mat& img)
@@ -155,13 +158,13 @@ void ClearBorder(Mat& img)
 		{
 			for (int x = left; x < right; x++)
 			{
-			    for (int y = top; y < bottom; y++)
-			    {
+				for (int y = top; y < bottom; y++)
+				{
 					if (labelsPtr[labels.cols * y + x] == i)
 					{
 						ptr[img.cols * y + x] = 0;
 					}
-			    }
+				}
 			}
 		}
 	}
@@ -175,17 +178,17 @@ void RemoveSmallObjects(cuda::GpuMat& src)
 
 	const int number = connectedComponentsWithStats(img, labels, stats, centroids);
 
-	if(!img.isContinuous() || !labels.isContinuous() || !stats.isContinuous())
+	if (!img.isContinuous() || !labels.isContinuous() || !stats.isContinuous())
 		std::cout << "WTF";
 
 	uchar* const ptr = img.ptr<uchar>(0);
 	const int* const labelsPtr = labels.ptr<int>(0);
 	const int* const statsPtr = stats.ptr<int>(0);
 
-	for(int i = 1; i < number; i++)
+	for (int i = 1; i < number; i++)
 	{
 		const int area = statsPtr[i * CC_STAT_MAX + CC_STAT_AREA];
-		if(area < MAX_AREA)
+		if (area < MAX_AREA)
 		{
 			const int left = statsPtr[i * CC_STAT_MAX + CC_STAT_LEFT];
 			const int right = statsPtr[i * CC_STAT_MAX + CC_STAT_WIDTH] + left;
@@ -196,10 +199,10 @@ void RemoveSmallObjects(cuda::GpuMat& src)
 			{
 				for (int y = top; y < bottom; y++)
 				{
-				    if (labelsPtr[labels.cols * y + x] == i)
-				    {
+					if (labelsPtr[labels.cols * y + x] == i)
+					{
 						ptr[img.cols * y + x] = 0;
-				    }
+					}
 				}
 			}
 		}
