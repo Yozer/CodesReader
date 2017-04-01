@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace CodesReader.Imaging
@@ -28,7 +29,20 @@ namespace CodesReader.Imaging
             MemoryStream stream = new MemoryStream(codeImageBytes);
             var segmentedResult = new List<Bitmap> {(Bitmap) Image.FromStream(stream)};
 
+            if (result.array.Any(t => t.Width != 0))
+            {
+                foreach (var codeRect in result.array)
+                {
+                    segmentedResult.Add(CropImage(segmentedResult[0], codeRect));
+                }
+            }
+
             return segmentedResult;
+        }
+
+        private static Bitmap CropImage(Bitmap img, CodeRect cropArea)
+        {
+            return img.Clone(new Rectangle(cropArea.Left, cropArea.Top, cropArea.Width, cropArea.Height), img.PixelFormat);
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]

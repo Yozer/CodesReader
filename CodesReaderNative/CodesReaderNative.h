@@ -34,6 +34,7 @@ struct ArrayStruct
 
 const int LEFT_OFFSET = -49;
 
+bool SplitCodes(const Mat& source, ArrayStruct& result);
 void PreProcess(Mat& source, Mat& buffer);
 Rect Process(Mat& source, Mat& buffer, double threshold);
 void RemoveSmallObjects(Mat& src);

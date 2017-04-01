@@ -99,8 +99,6 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Imaging\IImageProcessor.cs" />
-    <Compile Include="Imaging\ImageProcessor.cs" />
-    <Compile Include="Imaging\ImageProcessorCuda.cs" />
     <Compile Include="Imaging\ImageProcessorOpenCv.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

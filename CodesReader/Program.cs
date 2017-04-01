@@ -19,7 +19,7 @@ namespace CodesReader
         [STAThread]
         static void Main()
         {
-            Test();
+            //Test();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
@@ -55,7 +55,7 @@ namespace CodesReader
 
 
             //foreach (var file in Directory.EnumerateFiles(@"D:\dataset\easy\read"))
-            Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\read"), new ParallelOptions {MaxDegreeOfParallelism = 8}, file =>
+            Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\read"), new ParallelOptions { MaxDegreeOfParallelism = 10 }, file =>
             {
                 var list = processor.SegmentCode(file);
                 if (list == null)

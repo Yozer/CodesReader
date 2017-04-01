@@ -23,9 +23,100 @@ extern "C" __declspec(dllexport) void segment_codes(char* path, ArrayStruct& res
 	else
 	{
 		Mat subRect = img(codeRect);
+		SplitCodes(subRect, result);
 		codePtr = MatToBytes(subRect, result);
 	}
 }
+
+bool FillWithCodes(const Mat& source, ArrayStruct& result, double thr, int strelWidth)
+{
+	Mat buff, img;
+	threshold(source, img, thr, 255.0, CV_THRESH_BINARY);
+	auto strel = getStructuringElement(MORPH_RECT, Size(strelWidth, 45), Point(0, 0));
+	morphologyEx(img, buff, MORPH_OPEN, strel);
+	bitwise_not(buff, img);
+
+	Mat labels, stats, centroids;
+	const int number = connectedComponentsWithStats(img, labels, stats, centroids);
+
+	if (number != 30) // background counts as one
+		return false;
+
+	if (!img.isContinuous() || !labels.isContinuous() || !stats.isContinuous())
+		throw std::exception();
+
+	const int* const statsPtr = stats.ptr<int>(0);
+
+	for(int i = 1; i < number; ++i)
+	{
+		const int left = statsPtr[i * CC_STAT_MAX + CC_STAT_LEFT];
+		const int width = statsPtr[i * CC_STAT_MAX + CC_STAT_WIDTH];
+		const int top = statsPtr[i * CC_STAT_MAX + CC_STAT_TOP];
+		const int height = statsPtr[i * CC_STAT_MAX + CC_STAT_HEIGHT];
+
+		result.array[i - 1] = CodeRect(left, top, width, height);
+	}
+
+	return true;
+}
+
+bool SplitCodes(const Mat& source, ArrayStruct& result)
+{
+	bool res = FillWithCodes(source, result, 204.0, 1);
+	if (!res)
+		res = FillWithCodes(source, result, 153.0, 1);
+	if (!res)
+		res = FillWithCodes(source, result, 204.0, 2);
+	if (!res)
+		res = FillWithCodes(source, result, 153.0, 2);
+
+	return res;
+}
+//bool SplitCodes(const Mat& source, ArrayStruct& result)
+//{
+//	Mat img;
+//	threshold(source, img, 150.0, 255.0, CV_THRESH_BINARY);
+//	bool isBlackPixel = false;
+//	int prev_x = 0;
+//	int index = 0;
+//
+//	for (int x = 3; x < img.cols; x++)
+//	{
+//		if (!isBlackPixel)
+//		{
+//			for (int y = 0; y < img.rows; y++)
+//			{
+//				if (img.at<uchar>(y, x) == 0)
+//				{
+//					isBlackPixel = true;
+//					result.array[index++] = CodeRect(prev_x, 0, x - 1 - prev_x, img.rows);
+//					prev_x = x - 1;
+//					break;
+//				}
+//			}
+//		}
+//
+//		if (isBlackPixel)
+//		{
+//			bool allWhite = true;
+//			for (int y = 0; y < img.rows; y++)
+//			{
+//				if (img.at<uchar>(y, x) == 0)
+//				{
+//					allWhite = false;
+//					break;
+//				}
+//			}
+//
+//			if (allWhite)
+//			{
+//				isBlackPixel = false;
+//			}
+//		}
+//	}
+//
+//	return index == 29;
+//}
 
 Rect TryProcess(Mat image, Mat buffer, double threshold)
 {
@@ -88,7 +179,7 @@ void PreProcess(Mat& source, Mat& buffer)
 
 	if (size.height > size.width)
 	{
-		rotate(source, buffer, ROTATE_90_CLOCKWISE);
+		rotate(source, buffer, ROTATE_90_COUNTERCLOCKWISE);
 		std::swap(source, buffer);
 		buffer.release();
 		buffer = Mat();
@@ -106,7 +197,6 @@ Rect FindBiggestBlob(const Mat& img)
 	if (!img.isContinuous() || !labels.isContinuous() || !stats.isContinuous())
 		throw std::exception();
 
-	const uchar* const ptr = img.ptr<uchar>(0);
 	const int* const statsPtr = stats.ptr<int>(0);
 	int maxArea = 0;
 	int labelIndex = 0;
@@ -122,14 +212,9 @@ Rect FindBiggestBlob(const Mat& img)
 	}
 
 	const int left = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_LEFT];
-	int width = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_WIDTH];
+	const int width = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_WIDTH];
 	const int top = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_TOP];
-	int height = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_HEIGHT];
-
-	//if (left + width > img.cols)
-	//	--width;
-	//if (top + height > img.rows)
-	//	--height;
+	const int height = statsPtr[labelIndex * CC_STAT_MAX + CC_STAT_HEIGHT];
 
 	return Rect(left , top, width, height);
 }
