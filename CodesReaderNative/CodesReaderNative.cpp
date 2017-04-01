@@ -51,13 +51,13 @@ uchar* MatToBytes(Mat& image, ArrayStruct& result)
 
 void inline Inverse(Mat& source, Mat& buffer)
 {
-	cuda::bitwise_not(source, buffer);
+	bitwise_not(source, buffer);
 	std::swap(source, buffer);
 }
 
 Rect Process(Mat& source, Mat& buffer)
 {
-	cuda::threshold(source, buffer, 204.0, 255.0, CV_THRESH_BINARY_INV);
+	threshold(source, buffer, 204.0, 255.0, CV_THRESH_BINARY_INV);
 	std::swap(source, buffer);
 
 	RemoveSmallObjects(source);
@@ -68,7 +68,6 @@ Rect Process(Mat& source, Mat& buffer)
 	std::swap(source, buffer);
 	Inverse(source, buffer);
 
-	// back to CPU
 	ClearBorder(source);
 
 	strel = getStructuringElement(MORPH_RECT, Size(1, 5), Point(0, 0));
