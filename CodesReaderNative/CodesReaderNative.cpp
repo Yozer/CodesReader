@@ -12,30 +12,31 @@ extern "C" __declspec(dllexport) void segment_codes(char* path, ArrayStruct& res
 	Mat buffer;
 	PreProcess(img, buffer);
 
-	Mat preprocessedImage = img.clone();
-	Rect codeRect = Process(preprocessedImage, buffer);
+	Rect codeRect = TryProcess(img.clone(), buffer, 204.0);
+	if(codeRect.width == 0)
+		codeRect = TryProcess(img.clone(), buffer, 153.0);
 
-	if(codeRect.width > 450 | codeRect.width < 400 || codeRect.height > 28 || codeRect.height < 13)
+	if(codeRect.width == 0)
 	{
 		codePtr = nullptr;
 	}
 	else
 	{
-		if(codeRect.width + codeRect.x > img.cols)
-		{
-			throw std::exception();
-		}
-		if (codeRect.height + codeRect.y > img.rows)
-		{
-			throw std::exception();
-		}
-		if (codeRect.y < 0 || codeRect.x < 0)
-		{
-			throw std::exception();
-		}
 		Mat subRect = img(codeRect);
 		codePtr = MatToBytes(subRect, result);
 	}
+}
+
+Rect TryProcess(Mat image, Mat buffer, double threshold)
+{
+	Rect codeRect = Process(image, buffer, threshold);
+
+	if (codeRect.width > 450 | codeRect.width < 400 || codeRect.height > 28 || codeRect.height < 13)
+	{
+		return Rect();
+	}
+	
+	return codeRect;
 }
 
 uchar* MatToBytes(Mat& image, ArrayStruct& result)
@@ -55,9 +56,9 @@ void inline Inverse(Mat& source, Mat& buffer)
 	std::swap(source, buffer);
 }
 
-Rect Process(Mat& source, Mat& buffer)
+Rect Process(Mat& source, Mat& buffer, double thr)
 {
-	threshold(source, buffer, 204.0, 255.0, CV_THRESH_BINARY_INV);
+	threshold(source, buffer, thr, 255.0, CV_THRESH_BINARY_INV);
 	std::swap(source, buffer);
 
 	RemoveSmallObjects(source);
@@ -66,14 +67,17 @@ Rect Process(Mat& source, Mat& buffer)
 	auto strel = getStructuringElement(MORPH_RECT, Size(45, 1), Point(0, 0));
 	morphologyEx(source, buffer, MORPH_OPEN, strel);
 	std::swap(source, buffer);
-	Inverse(source, buffer);
 
+	Inverse(source, buffer);
 	ClearBorder(source);
+	Inverse(source, buffer);
 
 	strel = getStructuringElement(MORPH_RECT, Size(1, 5), Point(0, 0));
 	morphologyEx(source, buffer, MORPH_OPEN, strel);
+	std::swap(source, buffer);
 
-	return FindBiggestBlob(buffer);
+	Inverse(source, buffer);
+	return FindBiggestBlob(source);
 }
 
 void PreProcess(Mat& source, Mat& buffer)

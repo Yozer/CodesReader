@@ -35,9 +35,10 @@ struct ArrayStruct
 const int LEFT_OFFSET = -49;
 
 void PreProcess(Mat& source, Mat& buffer);
-Rect Process(Mat& source, Mat& buffer);
+Rect Process(Mat& source, Mat& buffer, double threshold);
 void RemoveSmallObjects(Mat& src);
 void ClearBorder(Mat& img);
 Rect FindBiggestBlob(const Mat& img);
 uchar* MatToBytes(Mat& image, ArrayStruct& result);
+Rect TryProcess(Mat image, Mat buffer, double threshold);
 extern "C" __declspec(dllexport) void segment_codes(char* path, ArrayStruct& result, unsigned char*& codePtr);

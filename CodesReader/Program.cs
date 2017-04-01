@@ -53,12 +53,10 @@ namespace CodesReader
             //    result.Mat.Bitmap.Save(@"D:\tmp.bmp", ImageFormat.Bmp);
             //}
 
-            Stopwatch sw = new Stopwatch();
-            var times = new List<long>(20000);
 
-            foreach (var file in Directory.EnumerateFiles(@"D:\dataset\easy\read"))
+            //foreach (var file in Directory.EnumerateFiles(@"D:\dataset\easy\read"))
+            Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\read"), new ParallelOptions {MaxDegreeOfParallelism = 8}, file =>
             {
-                sw.Restart();
                 var list = processor.SegmentCode(file);
                 if (list == null)
                 {
@@ -69,11 +67,8 @@ namespace CodesReader
                     list[0].Save(@"D:\dataset\easy\second_try_c_sharp\read_and_segmented\" + Path.GetFileName(file), ImageFormat.Jpeg);
                     list.ForEach(t => t.Dispose());
                 }
+            });
 
-                times.Add(sw.ElapsedMilliseconds);
-            }
-
-            File.WriteAllText("times_cpuv3.txt", $"avg: {times.Average()} min: {times.Min()} max: {times.Max()}");
 
             //foreach (var file in Directory.EnumerateFiles(@"D:\dataset\easy\read"))
             //Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\read"), new ParallelOptions {MaxDegreeOfParallelism = 8}, file =>
