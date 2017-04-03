@@ -10,38 +10,26 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodesReader", "CodesReader\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CodesReaderNative", "CodesReaderNative\CodesReaderNative.vcxproj", "{8FE921E6-468E-44A7-9F98-79E30F31AF35}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TesseractOCR", "TesseractOCR\TesseractOCR.csproj", "{76CAD7A1-B8FD-4A86-949C-267BC19DE504}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
-		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Debug|x64.ActiveCfg = Debug|x64
 		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Debug|x64.Build.0 = Debug|x64
-		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Debug|x86.ActiveCfg = Debug|x86
-		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Debug|x86.Build.0 = Debug|x86
-		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Release|x64.ActiveCfg = Release|x64
 		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Release|x64.Build.0 = Release|x64
-		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Release|x86.ActiveCfg = Release|x86
-		{1423CC3D-1EE8-44CE-BC37-F35CB0CAF9A8}.Release|x86.Build.0 = Release|x86
-		{8FE921E6-468E-44A7-9F98-79E30F31AF35}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{8FE921E6-468E-44A7-9F98-79E30F31AF35}.Debug|x64.ActiveCfg = Debug|x64
 		{8FE921E6-468E-44A7-9F98-79E30F31AF35}.Debug|x64.Build.0 = Debug|x64
-		{8FE921E6-468E-44A7-9F98-79E30F31AF35}.Debug|x86.ActiveCfg = Debug|Win32
-		{8FE921E6-468E-44A7-9F98-79E30F31AF35}.Debug|x86.Build.0 = Debug|Win32
-		{8FE921E6-468E-44A7-9F98-79E30F31AF35}.Release|Any CPU.ActiveCfg = Release|Win32
 		{8FE921E6-468E-44A7-9F98-79E30F31AF35}.Release|x64.ActiveCfg = Release|x64
 		{8FE921E6-468E-44A7-9F98-79E30F31AF35}.Release|x64.Build.0 = Release|x64
-		{8FE921E6-468E-44A7-9F98-79E30F31AF35}.Release|x86.ActiveCfg = Release|Win32
-		{8FE921E6-468E-44A7-9F98-79E30F31AF35}.Release|x86.Build.0 = Release|Win32
+		{76CAD7A1-B8FD-4A86-949C-267BC19DE504}.Debug|x64.ActiveCfg = Debug|x64
+		{76CAD7A1-B8FD-4A86-949C-267BC19DE504}.Debug|x64.Build.0 = Debug|x64
+		{76CAD7A1-B8FD-4A86-949C-267BC19DE504}.Release|x64.ActiveCfg = Release|x64
+		{76CAD7A1-B8FD-4A86-949C-267BC19DE504}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
