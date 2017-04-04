@@ -34,6 +34,13 @@ namespace CodesReader
 
         private void selectImage_Click(object sender, EventArgs e)
         {
+            segmentedImage.Image?.Dispose();
+            foreach (var pictureBox in _boxes)
+            {
+                pictureBox.Image?.Dispose();
+                pictureBox.Image = null;
+            }
+
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
                 if (ofd.ShowDialog() == DialogResult.OK)

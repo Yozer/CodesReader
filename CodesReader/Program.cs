@@ -55,6 +55,8 @@ namespace CodesReader
 
 
             //foreach (var file in Directory.EnumerateFiles(@"D:\dataset\easy\read"))
+            Directory.EnumerateFiles(@"D:\dataset\easy\second_try_c_sharp\not_splited").ToList().ForEach(File.Delete);
+
             Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\read"), new ParallelOptions { MaxDegreeOfParallelism = 10 }, file =>
             {
                 var list = processor.SegmentCode(file);
@@ -65,6 +67,12 @@ namespace CodesReader
                 else
                 {
                     list[0].Save(@"D:\dataset\easy\second_try_c_sharp\read_and_segmented\" + Path.GetFileName(file), ImageFormat.Jpeg);
+
+                    if (list.Count != 26)
+                    {
+                        File.Copy(file, @"D:\dataset\easy\second_try_c_sharp\not_splited\" + Path.GetFileName(file), true);
+                    }
+
                     list.ForEach(t => t.Dispose());
                 }
             });

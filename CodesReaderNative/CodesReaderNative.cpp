@@ -28,24 +28,62 @@ extern "C" __declspec(dllexport) void segment_codes(char* path, ArrayStruct& res
 	}
 }
 
-bool FillWithCodes(const Mat& source, ArrayStruct& result, double thr, int strelWidth)
+bool FindCodes(const Mat& source, ArrayStruct& result, double thr, int strelWidth, bool adaptive = false)
 {
+	const int minLetterWidth = 3;
 	Mat buff, img;
-	threshold(source, img, thr, 255.0, CV_THRESH_BINARY);
-	auto strel = getStructuringElement(MORPH_RECT, Size(strelWidth, 45), Point(0, 0));
-	morphologyEx(img, buff, MORPH_OPEN, strel);
-	bitwise_not(buff, img);
 
+	if(adaptive)
+		adaptiveThreshold(source, img, 255.0, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, thr, 5);
+	else
+		threshold(source, img, thr, 255.0, CV_THRESH_BINARY);
+
+	//imwrite("D:\\test.bmp", img);
+	bitwise_not(img, buff);
+	RemoveSmallObjects(buff, 8);
+	bitwise_not(buff, img);
+	//imwrite("D:\\test.bmp", img);
+
+	uchar* const ptrImage = img.ptr(0);
+	const int upper = (source.rows / 2.0 + 0.5) - 1;
+	for(int i = upper; i > 0; --i)
+	{
+		for(int x = 0; x < source.cols; ++x)
+		{
+			if (ptrImage[i * source.cols + x] == 0) // black
+			{
+				ptrImage[(i - 1) * source.cols + x] = 0;
+			}
+		}
+	}
+
+	for (int i = source.rows - upper - 1; i < source.rows - 1; ++i)
+	{
+		for (int x = 0; x < source.cols; ++x)
+		{
+			if (ptrImage[i * source.cols + x] == 0) // black
+			{
+				ptrImage[(i + 1) * source.cols + x] = 0;
+			}
+		}
+	}
+
+	//imwrite("D:\\test.bmp", img);
+	auto strel = getStructuringElement(MORPH_RECT, Size(strelWidth, 7), Point(0, 0));
+	morphologyEx(img, buff, MORPH_ERODE, strel);
+	//imwrite("D:\\test.bmp", buff);
+
+	bitwise_not(buff, img);
+	//std::swap(img, buff);
 	Mat labels, stats, centroids;
 	const int number = connectedComponentsWithStats(img, labels, stats, centroids);
 
-	if (number != 30) // background counts as one
-		return false;
 
 	if (!img.isContinuous() || !labels.isContinuous() || !stats.isContinuous())
 		throw std::exception();
 
 	const int* const statsPtr = stats.ptr<int>(0);
+	int index = 0;
 
 	for(int i = 1; i < number; ++i)
 	{
@@ -54,69 +92,39 @@ bool FillWithCodes(const Mat& source, ArrayStruct& result, double thr, int strel
 		const int top = statsPtr[i * CC_STAT_MAX + CC_STAT_TOP];
 		const int height = statsPtr[i * CC_STAT_MAX + CC_STAT_HEIGHT];
 
-		result.array[i - 1] = CodeRect(left, top, width, height);
+		if (width < minLetterWidth ||
+			top != 0 || height != source.rows) // skip dashes and other objects than letters
+		{
+			continue;
+		}
+
+		if(index < 25)
+			result.array[index] = CodeRect(left, 0, width, source.rows);
+		index++;
 	}
+
+	if (index != 25)
+		return false;
 
 	return true;
 }
 
 bool SplitCodes(const Mat& source, ArrayStruct& result)
 {
-	bool res = FillWithCodes(source, result, 204.0, 1);
+	bool res = FindCodes(source, result, 204.0, 1);
 	if (!res)
-		res = FillWithCodes(source, result, 153.0, 1);
+		res = FindCodes(source, result, 153.0, 1);
 	if (!res)
-		res = FillWithCodes(source, result, 204.0, 2);
+		res = FindCodes(source, result, 204.0, 2);
 	if (!res)
-		res = FillWithCodes(source, result, 153.0, 2);
-
+		res = FindCodes(source, result, 153.0, 2);
+	if (!res)
+		res = FindCodes(source, result, 11, 1, true);
+	if (!res)
+		res = FindCodes(source, result, 11, 2, true);
+	
 	return res;
 }
-//bool SplitCodes(const Mat& source, ArrayStruct& result)
-//{
-//	Mat img;
-//	threshold(source, img, 150.0, 255.0, CV_THRESH_BINARY);
-//	bool isBlackPixel = false;
-//	int prev_x = 0;
-//	int index = 0;
-//
-//	for (int x = 3; x < img.cols; x++)
-//	{
-//		if (!isBlackPixel)
-//		{
-//			for (int y = 0; y < img.rows; y++)
-//			{
-//				if (img.at<uchar>(y, x) == 0)
-//				{
-//					isBlackPixel = true;
-//					result.array[index++] = CodeRect(prev_x, 0, x - 1 - prev_x, img.rows);
-//					prev_x = x - 1;
-//					break;
-//				}
-//			}
-//		}
-//
-//		if (isBlackPixel)
-//		{
-//			bool allWhite = true;
-//			for (int y = 0; y < img.rows; y++)
-//			{
-//				if (img.at<uchar>(y, x) == 0)
-//				{
-//					allWhite = false;
-//					break;
-//				}
-//			}
-//
-//			if (allWhite)
-//			{
-//				isBlackPixel = false;
-//			}
-//		}
-//	}
-//
-//	return index == 29;
-//}
 
 Rect TryProcess(Mat image, Mat buffer, double threshold)
 {
@@ -152,7 +160,7 @@ Rect Process(Mat& source, Mat& buffer, double thr)
 	threshold(source, buffer, thr, 255.0, CV_THRESH_BINARY_INV);
 	std::swap(source, buffer);
 
-	RemoveSmallObjects(source);
+	RemoveSmallObjects(source, 8);
 	Inverse(source, buffer);
 
 	auto strel = getStructuringElement(MORPH_RECT, Size(45, 1), Point(0, 0));
@@ -254,9 +262,8 @@ void ClearBorder(Mat& img)
 	}
 }
 
-void RemoveSmallObjects(Mat& src)
+void RemoveSmallObjects(Mat& src, const int minArea)
 {
-	const int MAX_AREA = 8;
 	Mat labels, stats, centroids;
 
 	const int number = connectedComponentsWithStats(src, labels, stats, centroids);
@@ -271,7 +278,7 @@ void RemoveSmallObjects(Mat& src)
 	for (int i = 1; i < number; i++)
 	{
 		const int area = statsPtr[i * CC_STAT_MAX + CC_STAT_AREA];
-		if (area < MAX_AREA)
+		if (area < minArea)
 		{
 			const int left = statsPtr[i * CC_STAT_MAX + CC_STAT_LEFT];
 			const int right = statsPtr[i * CC_STAT_MAX + CC_STAT_WIDTH] + left;

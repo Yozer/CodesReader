@@ -29,7 +29,7 @@ namespace CodesReader.Imaging
             MemoryStream stream = new MemoryStream(codeImageBytes);
             var segmentedResult = new List<Bitmap> {(Bitmap) Image.FromStream(stream)};
 
-            if (result.array.Any(t => t.Width != 0))
+            if (result.array.All(t => t.Width != 0))
             {
                 foreach (var codeRect in result.array)
                 {
@@ -48,7 +48,7 @@ namespace CodesReader.Imaging
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct ArrayStruct
         {
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 29)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 25)]
             public CodeRect[] array;
             public int length;
         }

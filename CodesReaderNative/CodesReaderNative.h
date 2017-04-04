@@ -28,7 +28,7 @@ struct CodeRect
 
 struct ArrayStruct
 {
-	CodeRect array[29];
+	CodeRect array[25];
 	int length;
 };
 
@@ -37,7 +37,7 @@ const int LEFT_OFFSET = -49;
 bool SplitCodes(const Mat& source, ArrayStruct& result);
 void PreProcess(Mat& source, Mat& buffer);
 Rect Process(Mat& source, Mat& buffer, double threshold);
-void RemoveSmallObjects(Mat& src);
+void RemoveSmallObjects(Mat& src, const int minArea);
 void ClearBorder(Mat& img);
 Rect FindBiggestBlob(const Mat& img);
 uchar* MatToBytes(Mat& image, ArrayStruct& result);
