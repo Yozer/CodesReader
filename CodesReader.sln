@@ -12,6 +12,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CodesReaderNative", "CodesR
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TesseractOCR", "TesseractOCR\TesseractOCR.csproj", "{76CAD7A1-B8FD-4A86-949C-267BC19DE504}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenCvSVM", "OpenCvSVM\OpenCvSVM.vcxproj", "{3311E72A-9337-48EC-A492-CFC3EC5E55B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -30,6 +32,10 @@ Global
 		{76CAD7A1-B8FD-4A86-949C-267BC19DE504}.Debug|x64.Build.0 = Debug|x64
 		{76CAD7A1-B8FD-4A86-949C-267BC19DE504}.Release|x64.ActiveCfg = Release|x64
 		{76CAD7A1-B8FD-4A86-949C-267BC19DE504}.Release|x64.Build.0 = Release|x64
+		{3311E72A-9337-48EC-A492-CFC3EC5E55B7}.Debug|x64.ActiveCfg = Debug|x64
+		{3311E72A-9337-48EC-A492-CFC3EC5E55B7}.Debug|x64.Build.0 = Debug|x64
+		{3311E72A-9337-48EC-A492-CFC3EC5E55B7}.Release|x64.ActiveCfg = Release|x64
+		{3311E72A-9337-48EC-A492-CFC3EC5E55B7}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

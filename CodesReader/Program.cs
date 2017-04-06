@@ -19,31 +19,26 @@ namespace CodesReader
         [STAThread]
         static void Main()
         {
-            //Test();
+            Test();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
         }
-
+        public static void Shuffle<T>(IList<T> list)
+        {
+            int n = list.Count;
+            Random rnd = new Random();
+            while (n > 1)
+            {
+                int k = (rnd.Next(0, n) % n);
+                n--;
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+        }
         private static void Test()
         {
-            //Mat img = CvInvoke.Imread("D:\\B2MMQ-3K3VW-PCCDM-99DBQ-WQRCB.jpg", ImreadModes.Grayscale);
-            //GpuMat dst = new GpuMat(), src = new GpuMat();
-            //src.Upload(img);
-
-            //CudaInvoke.Threshold(src, dst, 128.0, 255.0, ThresholdType.Binary);
-
-            //Mat resultHost = new Mat();
-            //dst.Download(resultHost);
-
-            //resultHost.Save("D:\\out.png");
-
-
-            //dst.Dispose();
-            //src.Dispose();
-            //img.Dispose();
-            //resultHost.Dispose();
-
             IImageProcessor processor = new ImageProcessorOpenCv();
 
             //string path = @"D:\B2MMQ-3K3VW-PCCDM-99DBQ-WQRCB.jpg";
@@ -55,22 +50,37 @@ namespace CodesReader
 
 
             //foreach (var file in Directory.EnumerateFiles(@"D:\dataset\easy\read"))
-            Directory.EnumerateFiles(@"D:\dataset\easy\second_try_c_sharp\not_splited").ToList().ForEach(File.Delete);
+            //Directory.EnumerateFiles(@"D:\dataset\easy\second_try_c_sharp\not_splited").ToList().ForEach(File.Delete);
+            var dic = new Dictionary<char, int>();
 
-            Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\read"), new ParallelOptions { MaxDegreeOfParallelism = 10 }, file =>
+            Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\SVM\input"), new ParallelOptions { MaxDegreeOfParallelism = 1 }, file =>
             {
                 var list = processor.SegmentCode(file);
+                string code = Path.GetFileNameWithoutExtension(file).Replace("-", "");
+
                 if (list == null)
                 {
-                    File.Copy(file, @"D:\dataset\easy\second_try_c_sharp\not_segmented\" + Path.GetFileName(file), true);
+                    //File.Copy(file, @"D:\dataset\easy\second_try_c_sharp\not_segmented\" + Path.GetFileName(file), true);
                 }
                 else
                 {
-                    list[0].Save(@"D:\dataset\easy\second_try_c_sharp\read_and_segmented\" + Path.GetFileName(file), ImageFormat.Jpeg);
+                    //list[0].Save(@"D:\dataset\easy\second_try_c_sharp\read_and_segmented\" + Path.GetFileName(file), ImageFormat.Jpeg);
 
-                    if (list.Count != 26)
+                    //if (list.Count != 26)
+                    //{
+                    //    File.Copy(file, @"D:\dataset\easy\second_try_c_sharp\not_splited\" + Path.GetFileName(file), true);
+                    //}
+
+                    if (list.Count == 26)
                     {
-                        File.Copy(file, @"D:\dataset\easy\second_try_c_sharp\not_splited\" + Path.GetFileName(file), true);
+                        for (int i = 1; i < 26; ++i)
+                        {
+                            if(!dic.ContainsKey(code[i - 1]))
+                                dic.Add(code[i-1], 0);
+
+                            list[i].Save(@"D:\dataset\easy\SVM\input_letters\" + code[i - 1] + $"_{dic[code[i - 1]]}.bmp", ImageFormat.Bmp);
+                            ++dic[code[i - 1]];
+                        }
                     }
 
                     list.ForEach(t => t.Dispose());
