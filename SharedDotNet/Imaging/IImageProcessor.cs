@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace CodesReader.Imaging
+namespace SharedDotNet.Imaging
 {
     public interface IImageProcessor
     {

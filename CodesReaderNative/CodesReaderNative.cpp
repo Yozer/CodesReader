@@ -38,14 +38,14 @@ bool FindCodes(const Mat& source, ArrayStruct& result, double thr, int strelWidt
 	else
 		threshold(source, img, thr, 255.0, CV_THRESH_BINARY);
 
-	//imwrite("D:\\test.bmp", img);
+	imwrite("D:\\test.bmp", img);
 	bitwise_not(img, buff);
 	RemoveSmallObjects(buff, 8);
 	bitwise_not(buff, img);
-	//imwrite("D:\\test.bmp", img);
+	imwrite("D:\\test.bmp", img);
 
 	uchar* const ptrImage = img.ptr(0);
-	const int upper = (source.rows / 2.0 + 0.5) - 1;
+	const int upper = 2.0 / 5 * source.rows + 0.5; // (source.rows / 2.0 + 0.5) - 1;
 	for(int i = upper; i > 0; --i)
 	{
 		for(int x = 0; x < source.cols; ++x)
@@ -68,10 +68,10 @@ bool FindCodes(const Mat& source, ArrayStruct& result, double thr, int strelWidt
 		}
 	}
 
-	//imwrite("D:\\test.bmp", img);
+	imwrite("D:\\test.bmp", img);
 	auto strel = getStructuringElement(MORPH_RECT, Size(strelWidth, 7), Point(0, 0));
 	morphologyEx(img, buff, MORPH_ERODE, strel);
-	//imwrite("D:\\test.bmp", buff);
+	imwrite("D:\\test.bmp", buff);
 
 	bitwise_not(buff, img);
 	//std::swap(img, buff);

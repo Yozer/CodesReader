@@ -6,9 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace CodesReader.Imaging
+namespace SharedDotNet.Imaging
 {
-    class ImageProcessorOpenCv : IImageProcessor
+    public class ImageProcessorOpenCv : IImageProcessor
     {
         [DllImport("CodesReaderNative.dll", EntryPoint = "segment_codes")]
         private static extern void SegmentCodes([MarshalAs(UnmanagedType.LPStr)] string path, [Out] out ArrayStruct result, [In, Out] ref IntPtr code);
