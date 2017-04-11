@@ -4,11 +4,12 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharedDotNet.Compute;
 
 namespace SharedDotNet.Classifier
 {
     public interface IClassifier : IDisposable
     {
-        string Recognize(string imagePath);
+        void Recognize(List<ComputeResult> imagePath);
     }
 }

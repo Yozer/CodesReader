@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Python.Runtime;
 using SharedDotNet.Imaging;
 
@@ -10,31 +11,35 @@ namespace SharedDotNet.Classifier
 {
     public class NnLetterClassifier : ClassifierBase
     {
-        //private readonly Py.GILState _pyGIL;
         private readonly dynamic _model;
-
         private readonly IntPtr _threadPtr;
 
-        public NnLetterClassifier(IImageProcessor imageProcessor, string modelPath) 
-            : base(imageProcessor)
+        public NnLetterClassifier(string modelPath) 
         {
-            //_pyGIL = Py.GIL();
             PythonEngine.Initialize();
             _model = PythonEngine.ImportModule("run_model");
             _model.load_model(new PyString(modelPath));
-
-            _threadPtr = PythonEngine.BeginAllowThreads();
         }
 
-        protected override char[] Classify(IEnumerable<Bitmap> input)
+        protected override unsafe char[] Classify(List<Bitmap> input)
         {
-            using (Py.GIL())
+            int imgSize = input[0].Width * input[0].Height;
+            int size = input.Count * imgSize;
+            fixed (float* ptr = new float[size])
             {
-                using (PyObject data = new PyList(input.Select(t => ConvertToPyList(GetBitmapData(t))).ToArray()))
+                int index = 0;
+                foreach (var bitmap in input)
                 {
-                    return (char[])_model.predict(data);
+                    GetBitmapData(bitmap, ptr + index);
+                    index += imgSize;
                 }
+
+                return (char[])_model.predict(new PyLong(new IntPtr(ptr).ToInt64()), new PyInt(size));
             }
+            //using (PyObject data = new PyList(input.Select(t => ConvertToPyList(GetBitmapData(t))).ToArray()))
+            //{
+                
+            //}
         }
 
         private PyObject ConvertToPyList(float[] data)
@@ -44,10 +49,8 @@ namespace SharedDotNet.Classifier
 
         public override void Dispose()
         {
-            PythonEngine.EndAllowThreads(_threadPtr);
             _model.deinit();
             PythonEngine.Shutdown();
-            //_pyGIL?.Dispose();
         }
     }
 }

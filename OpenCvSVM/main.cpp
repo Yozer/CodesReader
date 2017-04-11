@@ -5,7 +5,7 @@
 namespace fs = std::experimental::filesystem;
 
 using namespace cv;
-const char* const traning_dir = "C:\\input_letters";
+const char* const traning_dir = "D:\\dataset\\grzego\\training_set";
 const std::string charset = "BCDFGHJKMNPQRTVWXY2346789";
 const int img_area = 30 * 35;
 const int num_files = 49975;

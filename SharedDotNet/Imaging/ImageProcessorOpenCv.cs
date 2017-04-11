@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using SharedDotNet.Compute;
 
 namespace SharedDotNet.Imaging
 {
@@ -13,14 +14,16 @@ namespace SharedDotNet.Imaging
         [DllImport("CodesReaderNative.dll", EntryPoint = "segment_codes")]
         private static extern void SegmentCodes([MarshalAs(UnmanagedType.LPStr)] string path, [Out] out ArrayStruct result, [In, Out] ref IntPtr code);
 
-        public List<Bitmap> SegmentCode(string path)
+        public ComputeResult SegmentCode(string path)
         {
             IntPtr codePtr = IntPtr.Zero;
+            var computeResult = new ComputeResult(path);
+
             SegmentCodes(path, out ArrayStruct result, ref codePtr);
 
             if (codePtr == IntPtr.Zero)
             {
-                return null;
+                return computeResult;
             }
 
             byte[] codeImageBytes = new byte[result.length];
@@ -28,22 +31,24 @@ namespace SharedDotNet.Imaging
             Marshal.FreeCoTaskMem(codePtr);
 
             var stream = new MemoryStream(codeImageBytes);
-            var segmentedResult = new List<Bitmap> {(Bitmap) Image.FromStream(stream)};
+            computeResult.SegmentedCode = (Bitmap)Image.FromStream(stream);
 
             if (result.array.All(t => t.Width != 0))
             {
-                var bitmapData = segmentedResult[0].LockBits(new Rectangle(0, 0, segmentedResult[0].Width, segmentedResult[0].Height), 
-                    ImageLockMode.ReadOnly, segmentedResult[0].PixelFormat);
+                computeResult.Letters = new List<Bitmap>(25);
+
+                var bitmapData = computeResult.SegmentedCode.LockBits(new Rectangle(0, 0, computeResult.SegmentedCode.Width, computeResult.SegmentedCode.Height), 
+                    ImageLockMode.ReadOnly, computeResult.SegmentedCode.PixelFormat);
 
                 foreach (var codeRect in result.array)
                 {
-                    segmentedResult.Add(CropImage(bitmapData, segmentedResult[0].Palette, codeRect.Left, codeRect.Top, codeRect.Left + codeRect.Width, codeRect.Top + codeRect.Height));
+                    computeResult.Letters.Add(CropImage(bitmapData, computeResult.SegmentedCode.Palette, codeRect.Left, codeRect.Top, codeRect.Left + codeRect.Width, codeRect.Top + codeRect.Height));
                 }
 
-                segmentedResult[0].UnlockBits(bitmapData);
+                computeResult.SegmentedCode.UnlockBits(bitmapData);
             }
 
-            return segmentedResult;
+            return computeResult;
         }
         static Bitmap CropImage(BitmapData sourceImage, ColorPalette palette, int xl, int yl, int xr, int yr)
         {
@@ -93,6 +98,10 @@ namespace SharedDotNet.Imaging
         public struct CodeRect
         {
             public int Left, Top, Width, Height;
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using SharedDotNet.Compute;
 
 namespace SharedDotNet.Imaging
 {
-    public interface IImageProcessor
+    public interface IImageProcessor : IDisposable
     {
-        List<Bitmap> SegmentCode(string path);
+        ComputeResult SegmentCode(string path);
     }
 }

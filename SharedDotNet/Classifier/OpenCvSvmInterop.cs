@@ -20,13 +20,12 @@ namespace SharedDotNet.Classifier
         private static extern unsafe char Predict(float* data);
 
         public OpenCvSvmInterop(IImageProcessor imageProcessor, string modelPath)
-            :base(imageProcessor)
         {
             _imageProcessor = imageProcessor;
             Init(modelPath);
         }
 
-        protected override unsafe char[] Classify(IEnumerable<Bitmap> input)
+        protected override unsafe char[] Classify(List<Bitmap> input)
         {
             return input
                     .Select(t =>

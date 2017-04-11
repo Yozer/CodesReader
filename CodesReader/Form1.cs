@@ -55,12 +55,11 @@ namespace CodesReader
 
                     IImageProcessor processor = new ImageProcessorOpenCv();
                     var result = processor.SegmentCode(ofd.FileName);
-                    segmentedImage.Image = result[0];
+                    segmentedImage.Image = result.SegmentedCode;
 
-                    for (int i = 0; i < _boxes.Count; i++)
+                    for (int i = 0; i < result.Letters.Count; i++)
                     {
-                        if (i + 1 >= result.Count) break;
-                        _boxes[i].Image = result[i + 1];
+                        _boxes[i].Image = result.Letters[i];
                     }
                 }
             }
