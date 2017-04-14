@@ -6,6 +6,8 @@ namespace SharedDotNet.Classifier
 {
     public class SVMClassifier : ClassifierBase
     {
+        public override int BufferSize { get; } = 500;
+
         [DllImport("CodesReaderNative.dll", EntryPoint = "init")]
         private static extern void Init([MarshalAs(UnmanagedType.LPStr)] string path);
         [DllImport("CodesReaderNative.dll", EntryPoint = "release")]

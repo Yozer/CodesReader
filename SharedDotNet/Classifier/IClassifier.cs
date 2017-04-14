@@ -11,5 +11,6 @@ namespace SharedDotNet.Classifier
     public interface IClassifier : IDisposable
     {
         void Recognize(List<ComputeResult> imagePath);
+        int BufferSize { get; }
     }
 }

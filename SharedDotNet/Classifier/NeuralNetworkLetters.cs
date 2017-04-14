@@ -11,6 +11,7 @@ namespace SharedDotNet.Classifier
 {
     public class NnLetterClassifier : ClassifierBase
     {
+        public override int BufferSize { get; } = 250;
         private readonly dynamic _model;
 
         public NnLetterClassifier(string modelPath) 
@@ -39,7 +40,7 @@ namespace SharedDotNet.Classifier
 
         public override void Dispose()
         {
-            _model.deinit();
+            //_model.deinit();
             PythonEngine.Shutdown();
         }
     }

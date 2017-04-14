@@ -55,13 +55,13 @@ void tranin(const char* dir)
 	Ptr<ml::SVM> svm = ml::SVM::create();
 
 	svm->setType(ml::SVM::C_SVC);
-	svm->setKernel(ml::SVM::LINEAR);
-	//svm->setDegree(1);
-	//svm->setCoef0(0);
-	//svm->setGamma(200);
-	//svm->setC(1);
+	svm->setKernel(ml::SVM::RBF);
+	//svm->setDegree(3);
+	//svm->setCoef0(1);
+	svm->setGamma(0.01);
+	svm->setC(10);
 	//svm->setTermCriteria(Ter0mCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
-	svm->setTermCriteria(TermCriteria(TermCriteria::EPS , 1000, 10e-4));
+	svm->setTermCriteria(TermCriteria(TermCriteria::COUNT , 10000, 10e-5));
 
 	Ptr<ml::TrainData> td = ml::TrainData::create(training_mat, ml::ROW_SAMPLE, labels);
 	svm->train(td);

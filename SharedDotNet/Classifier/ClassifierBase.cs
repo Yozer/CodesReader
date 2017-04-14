@@ -11,8 +11,10 @@ namespace SharedDotNet.Classifier
 {
     public abstract class ClassifierBase : IClassifier
     {
+        public abstract int BufferSize { get; }
         protected abstract char[] Classify(List<Bitmap> input);
         public abstract void Dispose();
+
         public void Recognize(List<ComputeResult> jobs)
         {
             char[] result = Classify(jobs.SelectMany(t => t.Letters).ToList());
@@ -36,6 +38,7 @@ namespace SharedDotNet.Classifier
                 computeResult.PredictedCode = builder.ToString();
             }
         }
+
         protected unsafe float[] GetBitmapData(Bitmap bitmap)
         {
             var data = new float[bitmap.Width * bitmap.Height];

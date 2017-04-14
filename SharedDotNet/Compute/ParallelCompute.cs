@@ -29,14 +29,13 @@ namespace SharedDotNet.Compute
             _queue = new BlockingCollection<ComputeResult>();
             Thread thread = CreateReaderThread(imagesPath);
 
-            const int bufferSize = 500;
-            var buffer = new List<ComputeResult>(bufferSize); // 1000 codes
+            var buffer = new List<ComputeResult>(Classifier.BufferSize); // 1000 codes
 
             while (_queue.TryTake(out ComputeResult item, Timeout.Infinite))
             {
                 // do something with item
                 buffer.Add(item);
-                if (buffer.Count == bufferSize)
+                if (buffer.Count == Classifier.BufferSize)
                 {
                     foreach (var computeResult in ComputeResults(buffer))
                         yield return computeResult;

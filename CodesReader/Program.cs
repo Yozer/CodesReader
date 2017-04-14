@@ -103,11 +103,12 @@ namespace CodesReader
         }
         private static void TryNeuralNetwork()
         {
-            //Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation").ToList().ForEach(File.Delete);
-            //Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation_whole").ToList().ForEach(File.Delete);
+            Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation").ToList().ForEach(File.Delete);
+            Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation_whole").ToList().ForEach(File.Delete);
+            var dictionary = new Dictionary<char, int>();
             int counter = 0, failed = 0, failed_letters = 0;
-            //IClassifier classifier = new NnLetterClassifier("summary/experiment-13/models/model");
-            IClassifier classifier = new SVMClassifier(@"C:\Users\domin\Documents\Visual Studio 2017\Projects\CodesReader\OpenCvSVM\test.yaml");
+            IClassifier classifier = new NnLetterClassifier("summary/experiment-13/models/model");
+            //IClassifier classifier = new SVMClassifier(@"C:\Users\domin\Documents\Visual Studio 2017\Projects\CodesReader\OpenCvSVM\test.yaml");
 
             using (var compute = new ParallelCompute(new ImageProcessorOpenCv(), classifier))
             {
@@ -124,18 +125,24 @@ namespace CodesReader
 
                     if (computeResult.PredictedCodeLetters != null && correctCode != computeResult.PredictedCodeLetters)
                     {
-                        //File.Copy(computeResult.ImagePath, @"D:\dataset\easy\wrong_segmentation_whole\" + fileName + ".jpg", true);
+                        File.Copy(computeResult.ImagePath, @"D:\dataset\easy\wrong_segmentation_whole\" + fileName + ".jpg", true);
                         for (int i = 0; i < 25; ++i)
                         {
                             if (correctCode[i] != computeResult.PredictedCodeLetters[i])
                             {
-                                //computeResult.Letters[i].Save(@"D:\dataset\easy\wrong_segmentation\" + correctCode[i] + "_predict=" + computeResult.PredictedCodeLetters[i] + "_" + fileName + ".bmp", ImageFormat.Bmp);
+                                if(!dictionary.ContainsKey(correctCode[i]))
+                                    dictionary.Add(correctCode[i], 0);
+
+                                computeResult.Letters[i].Save(@"D:\dataset\easy\wrong_segmentation\" + 
+                                    $"{correctCode[i]}_predicted={computeResult.PredictedCodeLetters[i]}_{fileName}_{dictionary[correctCode[i]]}.bmp", ImageFormat.Bmp);
+
                                 ++failed_letters;
+                                ++dictionary[correctCode[i]];
                             }
                         }
                     }
 
-                    Console.Write($"Total: {counter} Bad: {failed} Failed letters: {failed_letters}");
+                    Console.WriteLine($"Total: {counter} Bad: {failed} Failed letters: {failed_letters}");
                     computeResult.Dispose();
                 }
             }
