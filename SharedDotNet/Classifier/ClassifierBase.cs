@@ -35,20 +35,10 @@ namespace SharedDotNet.Classifier
                 --builder.Length;
                 computeResult.PredictedCode = builder.ToString();
             }
-
-            //string code = Path.GetFileNameWithoutExtension(imagePath).Replace("-", string.Empty);
-            //for (int i = 0; i < result.Length; ++i)
-            //{
-            //    if (code[i] != result[i])
-            //    {
-            //        data[i + 1].Save(@"D:\dataset\easy\wrong_segmentation\" + code[i] + "_predicted=" + result[i] + "_" + Path.GetFileNameWithoutExtension(imagePath) + ".bmp", ImageFormat.Bmp);
-            //    }
-            //}
-            //return string.Join("-", result.Batch(5).Select(t => new string(t.ToArray())).ToArray());
         }
         protected unsafe float[] GetBitmapData(Bitmap bitmap)
         {
-            var data = new float[30 * 35];
+            var data = new float[bitmap.Width * bitmap.Height];
             int i = 0;
             var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, PixelFormat.Format8bppIndexed);
 

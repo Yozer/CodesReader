@@ -5,79 +5,91 @@
 namespace fs = std::experimental::filesystem;
 
 using namespace cv;
-const char* const traning_dir = "D:\\dataset\\grzego\\training_set";
+const char* const traning_dir = "C:\\grzego\\training_set";
+const char* const validation_set = "C:\\grzego\\validation_set";
 const std::string charset = "BCDFGHJKMNPQRTVWXY2346789";
-const int img_area = 30 * 35;
-const int num_files = 49975;
+const int img_area = 15 * 25;
 
-void load_trening_data(Mat& traning_mat, Mat& labels);
-void tranin();
-void test_model(std::string name);
+void load_data(Mat& traning_mat, Mat& labels, const char* path);
+void tranin(const char* dir);
+void validate_model(std::string name, const char* dir);
 
 int main()
 {
-	tranin();
-	//test_model("test_rbf_g10_c0.01_10e-6eps.yaml");
+	tranin(traning_dir);
+	validate_model("test.yaml", validation_set);
+	validate_model("test.yaml", traning_dir);
 }
 
-void test_model(std::string name)
+void validate_model(std::string name, const char* dir)
 {
-	Ptr<ml::SVM> svm = ml::SVM::create();
-	svm->load(name);
+	Ptr<ml::SVM> svm = Algorithm::load<ml::SVM>(name);
 
+	Mat input, labels, predictedLabels;
 
-	for (const auto& p : fs::directory_iterator(traning_dir))
+	load_data(input, labels, dir);
+	svm->predict(input, predictedLabels);
+
+	if (!predictedLabels.isContinuous())
+		throw std::exception();
+
+	const int* const ptr_labels = labels.ptr<int>(0);
+	const float* const ptr_predicted = predictedLabels.ptr<float>(0);
+
+	int failed = 0;
+	for (int i = 0; i < labels.rows; ++i)
 	{
-		if (!fs::is_regular_file(p.status()))
-			continue;
-
-
+		if (ptr_labels[i] != ((int)ptr_predicted[i] + 0.5))
+			++failed;
 	}
+
+	std::cout << failed << '/' << labels.rows << " succ: " << (float)failed / labels.rows << std::endl;
 }
 
-void tranin()
+void tranin(const char* dir)
 {
-	Mat training_mat(num_files, img_area, CV_32F);
-	Mat labels(num_files, 1, CV_32S);
+	Mat training_mat, labels;
 
-	load_trening_data(training_mat, labels);
+	load_data(training_mat, labels, dir);
 
 	Ptr<ml::SVM> svm = ml::SVM::create();
-	// edit: the params struct got removed,
-	// we use setter/getter now:
+
 	svm->setType(ml::SVM::C_SVC);
-	svm->setKernel(ml::SVM::RBF);
-	//svm->setDegree(3);
-	//svm->setGamma(10);
-	//svm->setC(0.01);
+	svm->setKernel(ml::SVM::LINEAR);
+	//svm->setDegree(1);
+	//svm->setCoef0(0);
+	//svm->setGamma(200);
+	//svm->setC(1);
 	//svm->setTermCriteria(Ter0mCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
-	svm->setTermCriteria(TermCriteria(TermCriteria::EPS | TermCriteria::COUNT, 1000, 10e-3));
-	
+	svm->setTermCriteria(TermCriteria(TermCriteria::EPS , 1000, 10e-4));
+
 	Ptr<ml::TrainData> td = ml::TrainData::create(training_mat, ml::ROW_SAMPLE, labels);
-	//svm->train(td);
-	svm->trainAuto(td);
+	svm->train(td);
+	//svm->trainAuto(td);
 	svm->save("test.yaml");
 }
 
-void load_trening_data(Mat& traning_mat, Mat& labels)
+void load_data(Mat& traning_mat, Mat& labels, const char* path)
 {
 	int row_number = 0;
-
 	std::vector<fs::path> files;
-	files.reserve(num_files);
-	int* const ptr_labels = labels.ptr<int>(0);
 
-	for (fs::directory_entry p : fs::directory_iterator(traning_dir))
+	for (fs::directory_entry p : fs::directory_iterator(path))
 	{
-		if (!fs::is_regular_file(p.status()))
+		if (!is_regular_file(p.status()))
 			continue;
 
 		files.push_back(p.path());
 	}
-	random_shuffle(files.begin(), files.end());
 
+	traning_mat.create(static_cast<int>(files.size()), img_area, CV_32F);
+	labels.create(static_cast<int>(files.size()), 1, CV_32S);
+
+	if (!traning_mat.isContinuous() || !labels.isContinuous())
+		throw std::exception();
+
+	int* const ptr_labels = labels.ptr<int>(0);
 	std::mutex mutex;
-	std::unordered_set<char> s;
 	concurrency::parallel_for(static_cast<size_t>(0), files.size(), [&](size_t index)
 	{
 		const auto& p = files[index];
@@ -88,12 +100,11 @@ void load_trening_data(Mat& traning_mat, Mat& labels)
 
 		const auto file_name = p.filename().string();
 		const auto letter = file_name.substr(0, file_name.find('_'))[0];
-		
+
 		{
 			std::lock_guard<std::mutex> lock(mutex);
 			img.row(0).copyTo(traning_mat.row(row_number));
 			ptr_labels[row_number] = static_cast<int>(charset.find(letter));
-			s.insert(letter);
 			++row_number;
 		}
 	});

@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using MoreLinq;
 using SharedDotNet.Classifier;
 using SharedDotNet.Compute;
 using SharedDotNet.Imaging;
@@ -54,8 +49,8 @@ namespace CodesReader
         {
             // validation set
             IImageProcessor processor = new ImageProcessorOpenCv();
-            var skip = new HashSet<string>(Directory.EnumerateFiles(@"D:\dataset\easy\SVM\input").Select(Path.GetFileNameWithoutExtension));
-            var enu = new List<string>(Directory.EnumerateFiles(@"D:\dataset\easy\read")).Where(t => !skip.Contains(Path.GetFileNameWithoutExtension(t))).ToList();
+            var skip = new HashSet<string>(Directory.EnumerateFiles(@"C:\grzego\input").Select(Path.GetFileNameWithoutExtension));
+            var enu = new List<string>(Directory.EnumerateFiles(@"C:\grzego\read")).Where(t => !skip.Contains(Path.GetFileNameWithoutExtension(t))).ToList();
             var dic = new Dictionary<char, int>();
             Shuffle(enu);
 
@@ -74,8 +69,8 @@ namespace CodesReader
                                 if (!dic.ContainsKey(code[i]))
                                     dic.Add(code[i], 0);
 
-                                result.Letters[i].Save(@"D:\dataset\grzego\validation_set\" + code[i - 1] + $"_{dic[code[i - 1]]}.bmp", ImageFormat.Bmp);
-                                ++dic[code[i - 1]];
+                                result.Letters[i].Save(@"C:\grzego\validation_set\" + code[i] + $"_{dic[code[i]]}.bmp", ImageFormat.Bmp);
+                                ++dic[code[i]];
                             }
                         }
                     }
@@ -83,7 +78,7 @@ namespace CodesReader
             });
 
             dic = new Dictionary<char, int>();
-            Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\SVM\input"), new ParallelOptions { MaxDegreeOfParallelism = 1 }, file =>
+            Parallel.ForEach(Directory.EnumerateFiles(@"C:\grzego\input"), new ParallelOptions { MaxDegreeOfParallelism = 1 }, file =>
             {
                 using (var result = processor.SegmentCode(file))
                 {
@@ -95,11 +90,11 @@ namespace CodesReader
                         {
                             for (int i = 0; i < 25; ++i)
                             {
-                                if (!dic.ContainsKey(code[i - 1]))
-                                    dic.Add(code[i - 1], 0);
+                                if (!dic.ContainsKey(code[i]))
+                                    dic.Add(code[i], 0);
 
-                                result.Letters[i].Save(@"D:\dataset\grzego\training_set\" + code[i - 1] + $"_{dic[code[i - 1]]}.bmp", ImageFormat.Bmp);
-                                ++dic[code[i - 1]];
+                                result.Letters[i].Save(@"C:\grzego\training_set\" + code[i] + $"_{dic[code[i]]}.bmp", ImageFormat.Bmp);
+                                ++dic[code[i]];
                             }
                         }
                     }
@@ -108,14 +103,17 @@ namespace CodesReader
         }
         private static void TryNeuralNetwork()
         {
-            Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation").ToList().ForEach(File.Delete);
-            Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation_whole").ToList().ForEach(File.Delete);
-            int counter = 0, failed = 0;
-            using (var compute = new ParallelCompute(new ImageProcessorOpenCv(), new NnLetterClassifier("summary/experiment-11/models/model-7805")))
+            //Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation").ToList().ForEach(File.Delete);
+            //Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation_whole").ToList().ForEach(File.Delete);
+            int counter = 0, failed = 0, failed_letters = 0;
+            //IClassifier classifier = new NnLetterClassifier("summary/experiment-13/models/model");
+            IClassifier classifier = new SVMClassifier(@"C:\Users\domin\Documents\Visual Studio 2017\Projects\CodesReader\OpenCvSVM\test.yaml");
+
+            using (var compute = new ParallelCompute(new ImageProcessorOpenCv(), classifier))
             {
                 Console.Clear();
 
-                foreach (var computeResult in compute.Compute(Directory.EnumerateFiles(@"D:\dataset\easy\read")))
+                foreach (var computeResult in compute.Compute(Directory.EnumerateFiles(@"C:\grzego\read")))
                 {
                     Console.SetCursorPosition(0, 0);
                     ++counter;
@@ -126,15 +124,18 @@ namespace CodesReader
 
                     if (computeResult.PredictedCodeLetters != null && correctCode != computeResult.PredictedCodeLetters)
                     {
-                        File.Copy(computeResult.ImagePath, @"D:\dataset\easy\wrong_segmentation_whole\" + fileName + ".jpg", true);
+                        //File.Copy(computeResult.ImagePath, @"D:\dataset\easy\wrong_segmentation_whole\" + fileName + ".jpg", true);
                         for (int i = 0; i < 25; ++i)
                         {
                             if (correctCode[i] != computeResult.PredictedCodeLetters[i])
-                                computeResult.Letters[i].Save(@"D:\dataset\easy\wrong_segmentation\" + correctCode[i] + "_predict=" + computeResult.PredictedCodeLetters[i] + "_" + fileName + ".bmp", ImageFormat.Bmp);
+                            {
+                                //computeResult.Letters[i].Save(@"D:\dataset\easy\wrong_segmentation\" + correctCode[i] + "_predict=" + computeResult.PredictedCodeLetters[i] + "_" + fileName + ".bmp", ImageFormat.Bmp);
+                                ++failed_letters;
+                            }
                         }
                     }
-                    Console.Write($"Total: {counter} Bad: {failed}");
 
+                    Console.Write($"Total: {counter} Bad: {failed} Failed letters: {failed_letters}");
                     computeResult.Dispose();
                 }
             }

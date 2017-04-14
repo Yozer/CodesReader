@@ -12,7 +12,6 @@ namespace SharedDotNet.Classifier
     public class NnLetterClassifier : ClassifierBase
     {
         private readonly dynamic _model;
-        private readonly IntPtr _threadPtr;
 
         public NnLetterClassifier(string modelPath) 
         {
@@ -36,15 +35,6 @@ namespace SharedDotNet.Classifier
 
                 return (char[])_model.predict(new PyLong(new IntPtr(ptr).ToInt64()), new PyInt(size));
             }
-            //using (PyObject data = new PyList(input.Select(t => ConvertToPyList(GetBitmapData(t))).ToArray()))
-            //{
-                
-            //}
-        }
-
-        private PyObject ConvertToPyList(float[] data)
-        {
-            return new PyList(data.Select(t => (PyObject)new PyFloat(t)).ToArray());
         }
 
         public override void Dispose()

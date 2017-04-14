@@ -13,15 +13,15 @@ namespace SharedDotNet.Compute
 {
     public class ParallelCompute : ICompute
     {
-        private const int ThreadCount = 8;
-        private readonly IImageProcessor _imageProcessor;
-        private readonly IClassifier _classifier;
+        private const int ThreadCount = 7;
+        public IImageProcessor ImageProcessor { get; }
+        public IClassifier Classifier { get; }
         private BlockingCollection<ComputeResult> _queue;
 
         public ParallelCompute(IImageProcessor imageProcessor, IClassifier classifier)
         {
-            _imageProcessor = imageProcessor;
-            _classifier = classifier;
+            ImageProcessor = imageProcessor;
+            Classifier = classifier;
         }
 
         public IEnumerable<ComputeResult> Compute(IEnumerable<string> imagesPath)
@@ -29,10 +29,8 @@ namespace SharedDotNet.Compute
             _queue = new BlockingCollection<ComputeResult>();
             Thread thread = CreateReaderThread(imagesPath);
 
-            //var timeout = TimeSpan.FromMilliseconds(10);
             const int bufferSize = 500;
             var buffer = new List<ComputeResult>(bufferSize); // 1000 codes
-            //var results = new List<ComputeResult>();
 
             while (_queue.TryTake(out ComputeResult item, Timeout.Infinite))
             {
@@ -52,12 +50,11 @@ namespace SharedDotNet.Compute
             }
 
             _queue.Dispose();
-            //return results;
         }
 
         private IEnumerable<ComputeResult> ComputeResults(List<ComputeResult> buffer)
         {
-            _classifier.Recognize(buffer.Where(t => t.Letters != null).ToList());
+            Classifier.Recognize(buffer.Where(t => t.Letters != null).ToList());
             foreach (var result in buffer)
                 yield return result;
             buffer.Clear();
@@ -69,7 +66,7 @@ namespace SharedDotNet.Compute
             {
                 Parallel.ForEach(imagesPath, new ParallelOptions { MaxDegreeOfParallelism = ThreadCount }, file =>
                 {
-                    ComputeResult result = _imageProcessor.SegmentCode(file);
+                    ComputeResult result = ImageProcessor.SegmentCode(file);
                     _queue.Add(result);
                 });
 
@@ -82,8 +79,8 @@ namespace SharedDotNet.Compute
 
         public void Dispose()
         {
-            _classifier.Dispose();
-            _imageProcessor.Dispose();
+            Classifier.Dispose();
+            ImageProcessor.Dispose();
         }
     }
 }

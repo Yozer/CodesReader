@@ -4,11 +4,15 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharedDotNet.Classifier;
+using SharedDotNet.Imaging;
 
 namespace SharedDotNet.Compute
 {
     public interface ICompute : IDisposable
     {
+        IImageProcessor ImageProcessor { get; }
+        IClassifier Classifier { get; }
         IEnumerable<ComputeResult> Compute(IEnumerable<string> imagesPath);
     }
 

@@ -11,14 +11,18 @@ extern "C" __declspec(dllexport) void release()
 	svm.release();
 }
 
-char predict(float* data)
+extern "C" __declspec(dllexport) void predict(float* data, int count, char16_t* result)
 {
-	//Mat img = imread("C:\\input_letters\\B_1889.bmp", CV_LOAD_IMAGE_UNCHANGED);
-	//img.reshape(0, 1).convertTo(img, CV_32F);
+	Mat input(count, img_area, CV_32F, data);
+	input /= 255.0f;
+	Mat predicted;
 
-	Mat mat(1, img_area, CV_32F, data);
-	mat /= 255.0f;
-	int predicted = svm->predict(mat) + 0.5f;
-	return charset[predicted];
+	svm->predict(input, predicted);
+	const float* const ptr = predicted.ptr<float>(0);
+
+	for(int i = 0; i < count; ++i)
+	{
+		result[i] = charset[(int)(ptr[i] + 0.5)];
+	}
 }
 

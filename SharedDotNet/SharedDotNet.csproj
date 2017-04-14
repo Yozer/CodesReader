@@ -56,7 +56,7 @@
     <Compile Include="Compute\ParallelCompute.cs" />
     <Compile Include="Imaging\IImageProcessor.cs" />
     <Compile Include="Imaging\ImageProcessorOpenCv.cs" />
-    <Compile Include="Classifier\OpenCvSvmInterop.cs" />
+    <Compile Include="Classifier\SVMClassifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
