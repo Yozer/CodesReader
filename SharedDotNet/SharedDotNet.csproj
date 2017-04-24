@@ -52,6 +52,7 @@
     <Compile Include="Classifier\ClassifierBase.cs" />
     <Compile Include="Classifier\IClassifier.cs" />
     <Compile Include="Classifier\NeuralNetworkLetters.cs" />
+    <Compile Include="Classifier\RNNClassifier.cs" />
     <Compile Include="Compute\ICompute.cs" />
     <Compile Include="Compute\ParallelCompute.cs" />
     <Compile Include="Imaging\IImageProcessor.cs" />

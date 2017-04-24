@@ -15,7 +15,7 @@ namespace SharedDotNet.Classifier
         protected abstract char[] Classify(List<Bitmap> input);
         public abstract void Dispose();
 
-        public void Recognize(List<ComputeResult> jobs)
+        public virtual void Recognize(List<ComputeResult> jobs)
         {
             char[] result = Classify(jobs.SelectMany(t => t.Letters).ToList());
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace CodesReader
         [STAThread]
         static void Main()
         {
-            Test();
+            //Test();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
@@ -107,8 +108,10 @@ namespace CodesReader
             Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation_whole").ToList().ForEach(File.Delete);
             var dictionary = new Dictionary<char, int>();
             int counter = 0, failed = 0, failed_letters = 0;
-            IClassifier classifier = new NnLetterClassifier("summary/experiment-13/models/model");
-            //IClassifier classifier = new SVMClassifier(@"C:\Users\domin\Documents\Visual Studio 2017\Projects\CodesReader\OpenCvSVM\test.yaml");
+            IClassifier classifier = new NnLetterClassifier("summary/experiment-16/models/model");
+            //IClassifier classifier = new RNNClassifier("summary/seq/model");
+            //IClassifier classifier = new SVMClassifier(@"C:\Users\domin\Documents\Visual Studio 2017\Projects\CodesReader\OpenCvSVM\best.yaml");
+            //classifier.Recognize(new List<ComputeResult> { new ComputeResult("") { Letters = new List<Bitmap> { (Bitmap)Image.FromFile("D:\\test.bmp") } } });
 
             using (var compute = new ParallelCompute(new ImageProcessorOpenCv(), classifier))
             {
@@ -130,10 +133,10 @@ namespace CodesReader
                         {
                             if (correctCode[i] != computeResult.PredictedCodeLetters[i])
                             {
-                                if(!dictionary.ContainsKey(correctCode[i]))
+                                if (!dictionary.ContainsKey(correctCode[i]))
                                     dictionary.Add(correctCode[i], 0);
 
-                                computeResult.Letters[i].Save(@"D:\dataset\easy\wrong_segmentation\" + 
+                                computeResult.Letters[i].Save(@"D:\dataset\easy\wrong_segmentation\" +
                                     $"{correctCode[i]}_predicted={computeResult.PredictedCodeLetters[i]}_{fileName}_{dictionary[correctCode[i]]}.bmp", ImageFormat.Bmp);
 
                                 ++failed_letters;

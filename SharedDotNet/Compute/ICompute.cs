@@ -20,10 +20,10 @@ namespace SharedDotNet.Compute
     {
         public string ImagePath { get; }
         public Bitmap SegmentedCode { get; internal set; }
-        public List<Bitmap> Letters { get; internal set; }
+        public List<Bitmap> Letters { get;  set; }
         public string PredictedCode { get; internal set; }
         public string PredictedCodeLetters => PredictedCode?.Replace("-", string.Empty);
-        internal ComputeResult(string imagePath)
+        public ComputeResult(string imagePath)
         {
             ImagePath = imagePath;
         }

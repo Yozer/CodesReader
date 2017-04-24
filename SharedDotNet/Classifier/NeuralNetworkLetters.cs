@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Runtime.InteropServices;
 using Python.Runtime;
-using SharedDotNet.Imaging;
 
 namespace SharedDotNet.Classifier
 {
     public class NnLetterClassifier : ClassifierBase
     {
-        public override int BufferSize { get; } = 250;
+        public override int BufferSize { get; } = 50;
         private readonly dynamic _model;
 
         public NnLetterClassifier(string modelPath) 

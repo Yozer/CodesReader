@@ -57,16 +57,20 @@ void tranin(const char* dir)
 	svm->setType(ml::SVM::C_SVC);
 	svm->setKernel(ml::SVM::RBF);
 	//svm->setDegree(3);
-	//svm->setCoef0(1);
-	svm->setGamma(0.01);
-	svm->setC(10);
+	svm->setCoef0(0.05);
+	svm->setGamma(0.1);
+	//svm->setC(0.5);
 	//svm->setTermCriteria(Ter0mCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
-	svm->setTermCriteria(TermCriteria(TermCriteria::COUNT , 10000, 10e-5));
+	svm->setTermCriteria(TermCriteria(TermCriteria::EPS | TermCriteria::EPS , 10000, 10e-4));
 
 	Ptr<ml::TrainData> td = ml::TrainData::create(training_mat, ml::ROW_SAMPLE, labels);
 	svm->train(td);
-	//svm->trainAuto(td);
-	svm->save("test.yaml");
+	auto emptyGrid = ml::ParamGrid(0, 0, 1);
+	//svm->trainAuto(td, 10, ml::SVM::getDefaultGrid(ml::SVM::C), ml::SVM::getDefaultGrid(ml::SVM::GAMMA), 
+	//	emptyGrid, emptyGrid, emptyGrid, emptyGrid);
+	//svm->trainAuto(td, 10, emptyGrid, ml::SVM::getDefaultGrid(ml::SVM::GAMMA), emptyGrid, emptyGrid,
+	//	ml::SVM::getDefaultGrid(ml::SVM::COEF), ml::SVM::getDefaultGrid(ml::SVM::DEGREE));
+	svm->save("test2.yaml");
 }
 
 void load_data(Mat& traning_mat, Mat& labels, const char* path)
@@ -81,6 +85,9 @@ void load_data(Mat& traning_mat, Mat& labels, const char* path)
 
 		files.push_back(p.path());
 	}
+
+	std::random_shuffle(files.begin(), files.end());
+	//files = std::vector<fs::path>(files.begin(), files.begin() + 10000);
 
 	traning_mat.create(static_cast<int>(files.size()), img_area, CV_32F);
 	labels.create(static_cast<int>(files.size()), 1, CV_32S);
