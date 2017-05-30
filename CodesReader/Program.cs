@@ -108,9 +108,9 @@ namespace CodesReader
             Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation_whole").ToList().ForEach(File.Delete);
             var dictionary = new Dictionary<char, int>();
             int counter = 0, failed = 0, failed_letters = 0;
-            IClassifier classifier = new NnLetterClassifier("summary/experiment-16/models/model");
+            //IClassifier classifier = new NnLetterClassifier("summary/experiment-16/models/model");
             //IClassifier classifier = new RNNClassifier("summary/seq/model");
-            //IClassifier classifier = new SVMClassifier(@"C:\Users\domin\Documents\Visual Studio 2017\Projects\CodesReader\OpenCvSVM\best.yaml");
+            IClassifier classifier = new SVMClassifier(@"C:\Users\domin\Documents\Visual Studio 2017\Projects\CodesReader\OpenCvSVM\best.yaml");
             //classifier.Recognize(new List<ComputeResult> { new ComputeResult("") { Letters = new List<Bitmap> { (Bitmap)Image.FromFile("D:\\test.bmp") } } });
 
             using (var compute = new ParallelCompute(new ImageProcessorOpenCv(), classifier))
@@ -144,12 +144,12 @@ namespace CodesReader
                             }
                         }
                     }
-
-                    Console.WriteLine($"Total: {counter} Bad: {failed} Failed letters: {failed_letters}");
+                    //File.Move(computeResult.ImagePath, Path.Combine(@"D:\SO#138270\SO#138270", computeResult.PredictedCode + ".jpg"));
+                    Console.WriteLine($"Total: {counter} Bad: {failed}/{counter} Failed letters: {failed_letters}/{counter*25}.");
                     computeResult.Dispose();
                 }
             }
-
+            classifier.Dispose();
             //using (var nn = new NnLetterClassifier(new ImageProcessorOpenCv(), "summary/experiment-12/models/model-7805"))
             //{
             //    Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\read"), new ParallelOptions { MaxDegreeOfParallelism = 50 }, file =>

@@ -49,7 +49,8 @@ namespace CodesReader
 
             }
 
-            _classifier = new NnLetterClassifier(_modelPath);
+            //_classifier = new NnLetterClassifier(_modelPath);
+            _classifier = new SVMClassifier(@"C:\Users\domin\Documents\Visual Studio 2017\Projects\CodesReader\OpenCvSVM\best.yaml");
         }
 
         private void selectImage_Click(object sender, EventArgs e)
