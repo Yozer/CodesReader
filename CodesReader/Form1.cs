@@ -13,7 +13,7 @@ namespace CodesReader
     {
         private List<PictureBox> _boxes = new List<PictureBox>(25);
         private List<Label> _textboxes = new List<Label>(25);
-        private readonly string _modelPath = "models/experiment-17/model";
+        private readonly string _modelPath = "models/svm.yaml";
         private readonly IClassifier _classifier;
         public Form1()
         {
@@ -49,8 +49,9 @@ namespace CodesReader
 
             }
 
-            _classifier = new NnLetterClassifier(_modelPath);
-            //_classifier = new SVMClassifier(_modelPath);
+            //_classifier = new NnLetterClassifier(_modelPath);
+            _classifier = new SVMClassifier(_modelPath);
+            //_classifier = new RNNClassifier(_modelPath);
         }
 
         private void selectImage_Click(object sender, EventArgs e)

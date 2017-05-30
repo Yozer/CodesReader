@@ -84,7 +84,7 @@ namespace SharedDotNet.Classifier
                 {
                     GetBitmapData(bitmap, ptr + index);
                     index += imgSize;
-                    bitmap.Dispose();
+                    //bitmap.Dispose();
                 }
 
                 return (char[])_model.predict(new PyLong(new IntPtr(ptr).ToInt64()), new PyInt(size));

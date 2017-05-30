@@ -1,0 +1,12 @@
+\select@language {polish}
+\contentsline {section}{\numberline {1}Opis projektu}{2}
+\contentsline {section}{\numberline {2}Techniczne aspekty projektu}{2}
+\contentsline {subsection}{\numberline {2.1}Struktura projektu}{2}
+\contentsline {subsection}{\numberline {2.2}Wygl\IeC {\k a}d GUI}{3}
+\contentsline {section}{\numberline {3}Implementacja}{3}
+\contentsline {subsection}{\numberline {3.1}Segmentacja i filtracja skan\IeC {\'o}w}{3}
+\contentsline {subsection}{\numberline {3.2}SVM i sie\IeC {\'c} neuronowa}{4}
+\contentsline {section}{\numberline {4}Przyk\IeC {\l }ady wynik\IeC {\'o}w}{4}
+\contentsline {subsection}{\numberline {4.1}Przyk\IeC {\l }ad 1}{4}
+\contentsline {subsection}{\numberline {4.2}Przyk\IeC {\l }ad 2}{6}
+\contentsline {section}{\numberline {5}Wnioski}{7}
