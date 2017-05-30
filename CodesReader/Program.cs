@@ -43,10 +43,10 @@ namespace CodesReader
         {
             //SegmentAndSplitOneCode(@"D:\dataset\easy\read\T6GWD-TW9FQ-QQH3T-Q7MVJ-CF2V8.jpg");
             TryNeuralNetwork();
-            //PrepareDataForGrzego();
+            //PrepareData();
         }
 
-        private static void PrepareDataForGrzego()
+        private static void PrepareData()
         {
             // validation set
             IImageProcessor processor = new ImageProcessorOpenCv();
@@ -102,15 +102,16 @@ namespace CodesReader
                 }
             });
         }
+
         private static void TryNeuralNetwork()
         {
             Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation").ToList().ForEach(File.Delete);
             Directory.EnumerateFiles(@"D:\dataset\easy\wrong_segmentation_whole").ToList().ForEach(File.Delete);
             var dictionary = new Dictionary<char, int>();
             int counter = 0, failed = 0, failed_letters = 0;
-            //IClassifier classifier = new NnLetterClassifier("summary/experiment-16/models/model");
-            //IClassifier classifier = new RNNClassifier("summary/seq/model");
-            IClassifier classifier = new SVMClassifier(@"C:\Users\domin\Documents\Visual Studio 2017\Projects\CodesReader\OpenCvSVM\best.yaml");
+            //IClassifier classifier = new NnLetterClassifier("models/experiment-17/model");
+            //IClassifier classifier = new RNNClassifier("models/seq/model");
+            IClassifier classifier = new SVMClassifier(@"models\best.yaml");
             //classifier.Recognize(new List<ComputeResult> { new ComputeResult("") { Letters = new List<Bitmap> { (Bitmap)Image.FromFile("D:\\test.bmp") } } });
 
             using (var compute = new ParallelCompute(new ImageProcessorOpenCv(), classifier))
@@ -137,7 +138,7 @@ namespace CodesReader
                                     dictionary.Add(correctCode[i], 0);
 
                                 computeResult.Letters[i].Save(@"D:\dataset\easy\wrong_segmentation\" +
-                                    $"{correctCode[i]}_predicted={computeResult.PredictedCodeLetters[i]}_{fileName}_{dictionary[correctCode[i]]}.bmp", ImageFormat.Bmp);
+                                                              $"{correctCode[i]}_predicted={computeResult.PredictedCodeLetters[i]}_{fileName}_{dictionary[correctCode[i]]}.bmp", ImageFormat.Bmp);
 
                                 ++failed_letters;
                                 ++dictionary[correctCode[i]];
@@ -145,53 +146,11 @@ namespace CodesReader
                         }
                     }
                     //File.Move(computeResult.ImagePath, Path.Combine(@"D:\SO#138270\SO#138270", computeResult.PredictedCode + ".jpg"));
-                    Console.WriteLine($"Total: {counter} Bad: {failed}/{counter} Failed letters: {failed_letters}/{counter*25}.");
+                    Console.WriteLine($"Total: {counter} Bad: {failed}/{counter} Failed letters: {failed_letters}/{counter * 25}.");
                     computeResult.Dispose();
                 }
             }
             classifier.Dispose();
-            //using (var nn = new NnLetterClassifier(new ImageProcessorOpenCv(), "summary/experiment-12/models/model-7805"))
-            //{
-            //    Parallel.ForEach(Directory.EnumerateFiles(@"D:\dataset\easy\read"), new ParallelOptions { MaxDegreeOfParallelism = 50 }, file =>
-            //     {
-            //         string code = Path.GetFileNameWithoutExtension(file);
-            //         string predicted = nn.Recognize(file);
-            //         if (predicted != code)
-            //         {
-            //             //File.Copy(file, @"D:\dataset\easy\wrong_segmentation\" + Path.GetFileName(file), true);
-            //             Interlocked.Increment(ref failed);
-            //         }
-
-            //         if (counter % 100 == 0)
-            //         {
-            //             lock (nn)
-            //             {
-            //                 Console.WriteLine($"{failed}/{counter++}");
-            //             }
-            //         }
-            //         Interlocked.Increment(ref counter);
-            //     });
-            //}
-        }
-
-        private static void TryTestSet()
-        {
-            //int all = 0, c = 0;
-            //foreach (var file in Directory.EnumerateFiles(@"D:\grzego"))
-            //{
-            //    Bitmap bmp = (Bitmap)Image.FromFile(file);
-            //    char correct = Path.GetFileNameWithoutExtension(file)[0];
-            //    fixed (float* ptr = GetBitmapData(bmp))
-            //    {
-            //        char answer = Predict(ptr);
-            //        if (correct == answer)
-            //            ++c;
-            //    }
-
-            //    ++all;
-            //}
-
-            //float succ = (float)c / all;
         }
 
         private static void SegmentAndSplitOneCode(string path, string target = @"D:\tmp")

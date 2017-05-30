@@ -13,7 +13,7 @@ namespace CodesReader
     {
         private List<PictureBox> _boxes = new List<PictureBox>(25);
         private List<Label> _textboxes = new List<Label>(25);
-        private readonly string _modelPath = "summary/experiment-16/models/model";
+        private readonly string _modelPath = "models/experiment-17/model";
         private readonly IClassifier _classifier;
         public Form1()
         {
@@ -49,8 +49,8 @@ namespace CodesReader
 
             }
 
-            //_classifier = new NnLetterClassifier(_modelPath);
-            _classifier = new SVMClassifier(@"C:\Users\domin\Documents\Visual Studio 2017\Projects\CodesReader\OpenCvSVM\best.yaml");
+            _classifier = new NnLetterClassifier(_modelPath);
+            //_classifier = new SVMClassifier(_modelPath);
         }
 
         private void selectImage_Click(object sender, EventArgs e)
